@@ -34,15 +34,34 @@ end
 local M = {}
 
 
+M.config = {}
+
+
+function M.setup(config)
+    M.config.attach = config.attach or M.config.attach
+    M.config.detach = config.attach or M.config.detach
+end
+
+
 function M.init()
-  require("nvim-treesitter").define_modules {
-    module_template = {
-      module_path = "wide-to-long.internal",
-      is_supported = function(lang)
-        return ts_queries.get_query(lang, "wide-to-long") ~= nil
-      end
+    require("nvim-treesitter").define_modules {
+        wide_to_long = {
+            is_supported = function(lang)
+                return ts_queries.get_query(lang, "wide-to-long") ~= nil
+            end,
+            attach = function(bufnr, lang)
+                if M.config.attach ~= nil then
+                    M.config.attach(bufnr, lang)
+                end
+            end,
+            detach = function(bufnr, lang)
+                if M.config.detach ~= nil then
+                    M.config.detach(bufnr, lang)
+                end
+            end,
+            enable = true,
+        }
     }
-  }
 end
 
 
@@ -114,5 +133,6 @@ function M.long_to_wide()
         end
     end
 end
+
 
 return M
