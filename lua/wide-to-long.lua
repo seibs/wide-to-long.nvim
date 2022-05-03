@@ -22,7 +22,7 @@ local function find_current_function_node()
     -- TODO will different languages need different stopping conditions here?
     while node and not isin(node:type(), {"module", "block"}) do
         for capture_id, capture_node, meta in wtl_query:iter_captures(node, 0) do
-            if wtl_query.captures[capture_id] == "target-node" then
+            if wtl_query.captures[capture_id] == "args" then
                 return node
             end
         end
@@ -74,10 +74,11 @@ function M.wide_to_long()
 
         local indent_level = 0
         for capture_id, capture_node, meta in wtl_query:iter_captures(function_node, 0) do
-            if wtl_query.captures[capture_id] == "target-node" then
-                _, indent_level, _, _ = capture_node:range()
-            end
             if wtl_query.captures[capture_id] == "args" then
+                local start_row, start_col, end_row, end_col = capture_node:range()
+                local lines = vim.api.nvim_buf_get_lines(0, start_row, start_row + 1, false)
+                _, indent_level = string.find(table.remove(lines, 1), '^%s*')
+
                 local replacement = {}
                 table.insert(replacement, "")
                 for idx, child in ipairs(ts_utils.get_named_children(capture_node)) do
@@ -89,7 +90,6 @@ function M.wide_to_long()
                     )
                 end
                 table.insert(replacement, string.format("%" .. indent_level .. "s", ""))
-                local start_row, start_col, end_row, end_col = capture_node:range()
                 vim.api.nvim_buf_set_text(
                     0,
                     start_row, start_col + 1,
