@@ -2,6 +2,7 @@
 
 Refactor function definitions and calls from wide-to-long and long-to-wide.
 
+![Demo GIF](/assets/demo.gif)
 
 ## Installation
 
