@@ -12,24 +12,22 @@ local function isin(element, table)
     return false
 end
 
-
 local function find_current_function_node()
     local filelang = ts_parsers.ft_to_lang(vim.bo.filetype)
     local wtl_query = ts_queries.get_query(filelang, "wide-to-long")
 
-	local node = ts_utils.get_node_at_cursor()
+    local node = ts_utils.get_node_at_cursor()
 
     -- TODO will different languages need different stopping conditions here?
-    while node and not isin(node:type(), {"module", "block"}) do
+    while node and not isin(node:type(), { "module", "block" }) do
         for capture_id, capture_node, meta in wtl_query:iter_captures(node, 0) do
             if wtl_query.captures[capture_id] == "args" then
                 return node
             end
         end
         node = node:parent()
-    end 
+    end
 end
-
 
 local M = {}
 
@@ -41,7 +39,6 @@ function M.setup(config)
     M.config.attach = config.attach or M.config.attach
     M.config.detach = config.attach or M.config.detach
 end
-
 
 function M.init()
     require("nvim-treesitter").define_modules {
@@ -64,7 +61,6 @@ function M.init()
     }
 end
 
-
 function M.wide_to_long()
     local shiftwidth = vim.api.nvim_eval("&shiftwidth")
     local function_node = find_current_function_node()
@@ -85,7 +81,7 @@ function M.wide_to_long()
                     table.insert(
                         replacement,
                         string.format("%" .. indent_level + shiftwidth .. "s", "")
-                        .. vim.treesitter.query.get_node_text(child, 0)
+                        .. vim.treesitter.get_node_text(child, 0)
                         .. ","
                     )
                 end
@@ -96,12 +92,11 @@ function M.wide_to_long()
                     end_row, end_col - 1,
                     replacement
                 )
-                return 
+                return
             end
         end
     end
 end
-
 
 function M.long_to_wide()
     local shiftwidth = vim.api.nvim_eval("&shiftwidth")
@@ -117,22 +112,21 @@ function M.long_to_wide()
                 for idx, child in ipairs(ts_utils.get_named_children(capture_node)) do
                     single_line_args = (
                         single_line_args
-                        .. vim.treesitter.query.get_node_text(child, 0)
-                        .. ", "
-                    )
+                            .. vim.treesitter.get_node_text(child, 0)
+                            .. ", "
+                        )
                 end
                 local start_row, start_col, end_row, end_col = capture_node:range()
                 vim.api.nvim_buf_set_text(
                     0,
                     start_row, start_col + 1,
                     end_row, end_col - 1,
-                    {single_line_args:sub(1, -3)}
+                    { single_line_args:sub(1, -3) }
                 )
-                return 
+                return
             end
         end
     end
 end
-
 
 return M
